@@ -18,59 +18,117 @@ A comprehensive IT support ticket management system with a Spring Boot backend, 
 - Docker and Docker Compose
 - Oracle Container Registry account (for Oracle XE image)
 
-## Project Structure
+## Docker Setup
 
-```
-support/
-├── client/             # Swing client application
-├── server/             # Spring Boot backend
-├── docker-compose.yml  # Docker configuration
-├── Dockerfile         # Backend Docker build file
-└── init.sql           # Database initialization script
-```
+Our application uses Docker for containerization with the following components:
 
-## Setup Instructions
+### 1. Backend Service (Spring Boot)
+- Custom Dockerfile with multi-stage build
+- Base image: Eclipse Temurin 17
+- Exposed port: 8080
+- Environment variables for database configuration
 
-### 1. Oracle Container Registry Authentication
+### 2. Database Service (Oracle XE 21c)
+- Official Oracle Express Edition image
+- Exposed ports: 1521 (database), 5500 (EM Express)
+- Persistent volume for data storage
+- Automatic initialization script
 
-Before running the application, you need to authenticate with the Oracle Container Registry:
+### Docker Files
+- `Dockerfile`: Builds the Spring Boot application
+- `docker-compose.yml`: Orchestrates all services
+- `init.sql`: Database initialization script
 
-```bash
-docker login container-registry.oracle.com
-```
+## Quick Start
 
-### 2. Building and Running with Docker
-
-1. Clone the repository:
+1. **Login to Oracle Container Registry**
    ```bash
-   git clone <repository-url>
-   cd support
+   docker login container-registry.oracle.com
    ```
 
-2. Start the containers:
+2. **Clone the Repository**
+   ```bash
+   git clone https://github.com/REDWANE-AIT-OUKAZZAMANE/it-support-system.git
+   cd it-support-system
+   ```
+
+3. **Start Docker Services**
    ```bash
    docker-compose up -d
    ```
+   This will:
+   - Build the Spring Boot application
+   - Pull the Oracle XE image
+   - Create necessary volumes
+   - Start all services
 
-   This will start both the Oracle database and the Spring Boot backend.
-
-### 3. Running the Client Application
-
-1. Build the client JAR:
+4. **Build and Run the Client**
    ```bash
    cd client
    mvn clean package
-   ```
-
-2. Run the client:
-   ```bash
    java -jar target/support-client.jar
    ```
+
+## Default Credentials
+
+### Application Users
+- Admin: username: `admin`, password: `admin`
+- Employee: username: `employee`, password: `employee`
+
+### Database
+- System Password: `oracle`
+- Application Schema: `C##support_system`
+- Application Password: `support_password`
+
+## Docker Commands Reference
+
+### Basic Operations
+```bash
+# Start services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs
+
+# View logs of specific service
+docker-compose logs app    # Backend logs
+docker-compose logs oracle # Database logs
+
+# Rebuild services
+docker-compose up -d --build
+```
+
+### Maintenance
+```bash
+# Remove volumes (will delete all data)
+docker-compose down -v
+
+# Check service status
+docker-compose ps
+
+# Check container resources
+docker stats
+```
+
+### Troubleshooting
+```bash
+# Restart specific service
+docker-compose restart app
+docker-compose restart oracle
+
+# View real-time logs
+docker-compose logs -f
+
+# Check container health
+docker inspect <container_id>
+```
 
 ## Development Setup
 
 ### Backend Development
-
 1. Navigate to the server directory:
    ```bash
    cd server
@@ -82,7 +140,6 @@ docker login container-registry.oracle.com
    ```
 
 ### Client Development
-
 1. Navigate to the client directory:
    ```bash
    cd client
