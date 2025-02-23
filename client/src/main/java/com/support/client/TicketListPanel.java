@@ -15,6 +15,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
 
 public class TicketListPanel extends JPanel {
     private final SupportClient client;
@@ -404,7 +405,8 @@ public class TicketListPanel extends JPanel {
         String searchText = searchField.getText().trim();
         String selectedStatus = (String) statusFilter.getSelectedItem();
         
-        tableModel.setRowCount(0);
+        // Create a new list for filtered tickets
+        List<TicketDTO> filteredTickets = new ArrayList<>();
         
         for (TicketDTO ticket : allTickets) {
             boolean matchesSearch = searchText.isEmpty() || 
@@ -413,18 +415,27 @@ public class TicketListPanel extends JPanel {
                                   selectedStatus.equals(ticket.getStatus().name());
 
             if (matchesSearch && matchesStatus) {
-                Object[] row = {
-                    ticket.getId(),
-                    ticket.getTitle(),
-                    ticket.getDescription(),
-                    ticket.getPriority().name(),
-                    ticket.getCategory().name(),
-                    ticket.getStatus().name(),
-                    ticket.getCreatedByUsername(),
-                    ticket.getCreationDate()
-                };
-                tableModel.addRow(row);
+                filteredTickets.add(ticket);
             }
+        }
+
+        // Sort filtered tickets by creation date (newest first)
+        filteredTickets.sort((t1, t2) -> t2.getCreationDate().compareTo(t1.getCreationDate()));
+        
+        // Update table model
+        tableModel.setRowCount(0);
+        for (TicketDTO ticket : filteredTickets) {
+            Object[] row = {
+                ticket.getId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
+                ticket.getPriority().name(),
+                ticket.getCategory().name(),
+                ticket.getStatus().name(),
+                ticket.getCreatedByUsername(),
+                ticket.getCreationDate()
+            };
+            tableModel.addRow(row);
         }
     }
 

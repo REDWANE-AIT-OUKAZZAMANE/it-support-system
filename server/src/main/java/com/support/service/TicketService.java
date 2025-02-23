@@ -82,6 +82,9 @@ public class TicketService {
             tickets = ticketRepository.findByCreatedBy(user);
         }
 
+        // Sort tickets by creation date in descending order (newest first)
+        tickets.sort((t1, t2) -> t2.getCreationDate().compareTo(t1.getCreationDate()));
+
         return tickets.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -99,6 +102,9 @@ public class TicketService {
         } else {
             tickets = ticketRepository.findAll();
         }
+
+        // Sort tickets by creation date in descending order (newest first)
+        tickets.sort((t1, t2) -> t2.getCreationDate().compareTo(t1.getCreationDate()));
 
         return tickets.stream()
                 .map(this::convertToDTO)
