@@ -8,6 +8,7 @@ A comprehensive IT support ticket management system with a Spring Boot backend, 
 - Ticket creation and management
 - Real-time ticket status updates
 - Priority-based ticket handling
+- Comments system with threaded discussions
 - Modern and intuitive Swing-based user interface
 - Secure Oracle database backend
 
@@ -173,6 +174,51 @@ The backend configuration can be found in `server/src/main/resources/application
 
 ### Database Configuration
 Database initialization script is located in `init.sql`
+
+## Comments System
+
+The IT Support System includes a comprehensive comments system that allows users and IT support staff to communicate effectively:
+
+### Features
+- Add comments to tickets
+- View comment history with timestamps
+- User attribution for each comment
+- Chronological ordering (newest first)
+- Real-time updates
+- Rich text formatting
+
+### Usage
+1. **Adding Comments**
+   - Open a ticket
+   - Scroll to the comments section
+   - Enter your comment in the text area
+   - Click "Add Comment"
+
+2. **Viewing Comments**
+   - Comments are displayed in chronological order
+   - Each comment shows:
+     - Author username
+     - Timestamp
+     - Comment content
+
+3. **Permissions**
+   - All users can view comments on their tickets
+   - IT Support staff can view comments on all tickets
+   - All authenticated users can add comments
+
+### API Endpoints
+```bash
+# Add a comment
+POST /api/comments
+Content-Type: application/json
+{
+    "content": "Comment text",
+    "ticketId": 123
+}
+
+# Get comments for a ticket
+GET /api/comments/ticket/{ticketId}
+```
 
 ## Security Considerations
 
