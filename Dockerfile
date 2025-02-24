@@ -1,7 +1,7 @@
 FROM eclipse-temurin:17-jdk-alpine as build
 LABEL org.opencontainers.image.source=https://github.com/REDWANE-AIT-OUKAZZAMANE/it-support-system
 LABEL org.opencontainers.image.description="IT Support System Backend"
-LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.version="1.1.0"
 
 WORKDIR /workspace/app
 
