@@ -65,9 +65,6 @@ ORACLE_PWD=oracle
 SERVER_PORT=8080
 SPRING_PROFILES_ACTIVE=dev
 
-# GitHub Container Registry (if pulling pre-built images)
-GITHUB_USERNAME=your_username
-GITHUB_TOKEN=your_token
 ```
 
 ### 3. Client Configuration
