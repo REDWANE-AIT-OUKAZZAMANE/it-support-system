@@ -1,5 +1,6 @@
 services:
   app:
+    image: ghcr.io/redwane-ait-oukazzamane/support-app:1.0.0
     build: .
     ports:
       - "8080:8080"

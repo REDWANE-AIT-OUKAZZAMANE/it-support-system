@@ -2,11 +2,13 @@ package com.support.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Data
 @Table(name = "comments")
+@Data
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,9 +17,6 @@ public class Comment {
     @Column(nullable = false, length = 1000)
     private String content;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
@@ -25,4 +24,8 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 } 

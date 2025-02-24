@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.support.dto.CreateTicketRequest;
 import com.support.dto.TicketDTO;
 import com.support.entity.Ticket;
+import com.support.dto.CommentDTO;
+import com.support.dto.AddCommentRequest;
 
 import java.io.IOException;
 import java.net.URI;
@@ -147,5 +149,52 @@ public class ApiClient {
         }
 
         return objectMapper.readValue(response.body(), TicketDTO.class);
+    }
+
+    public static CommentDTO addComment(String content, Long ticketId) throws IOException, InterruptedException {
+        if (credentials == null) {
+            throw new IllegalStateException("No credentials set. Please log in first.");
+        }
+
+        AddCommentRequest request = new AddCommentRequest();
+        request.setContent(content);
+        request.setTicketId(ticketId);
+
+        String json = objectMapper.writeValueAsString(request);
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+            .uri(URI.create(BASE_URL + "/comments"))
+            .header("Authorization", credentials)
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(json))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to add comment: " + response.statusCode());
+        }
+
+        return objectMapper.readValue(response.body(), CommentDTO.class);
+    }
+
+    public static List<CommentDTO> getCommentsForTicket(Long ticketId) throws IOException, InterruptedException {
+        if (credentials == null) {
+            throw new IllegalStateException("No credentials set. Please log in first.");
+        }
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(BASE_URL + "/comments/ticket/" + ticketId))
+            .header("Authorization", credentials)
+            .GET()
+            .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return Arrays.asList(objectMapper.readValue(response.body(), CommentDTO[].class));
+        } else {
+            throw new IOException("Failed to get comments: " + response.statusCode());
+        }
     }
 } 

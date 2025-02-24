@@ -1,5 +1,7 @@
 package com.support.client;
 
+import com.support.dto.CommentDTO;
+import com.support.dto.CreateTicketRequest;
 import com.support.dto.TicketDTO;
 import com.support.entity.Ticket;
 import net.miginfocom.swing.MigLayout;
@@ -18,6 +20,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class TicketListPanel extends JPanel {
+    private static final Color BACKGROUND_COLOR = new Color(245, 245, 245);
+    private static final Color CARD_BACKGROUND = Color.WHITE;
+    private static final Color PRIMARY_COLOR = new Color(0, 120, 212);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm");
+
     private final SupportClient client;
     private final JTable ticketTable;
     private final DefaultTableModel tableModel;
@@ -31,10 +38,6 @@ public class TicketListPanel extends JPanel {
     private final JPanel filterPanel;
     private List<TicketDTO> allTickets;
     private static final String ALL_STATUSES = "All";
-    private static final Color PRIMARY_COLOR = new Color(70, 130, 180);
-    private static final Color BACKGROUND_COLOR = new Color(245, 245, 245);
-    private static final Color CARD_BACKGROUND = Color.WHITE;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
 
     public TicketListPanel(SupportClient client, boolean loadImmediately) {
         this.client = client;
@@ -457,10 +460,14 @@ public class TicketListPanel extends JPanel {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Ticket Details", true);
         dialog.setBackground(BACKGROUND_COLOR);
         
-        // Create main content panel
-        JPanel contentPanel = new JPanel(new MigLayout("fillx, insets 30", "[150][grow]", "[]15[]15[]15[]15[]15[]15[]15[]"));
-        contentPanel.setBackground(CARD_BACKGROUND);
-        contentPanel.setBorder(BorderFactory.createCompoundBorder(
+        // Create main content panel with tabs
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        
+        // Details Tab
+        JPanel detailsPanel = new JPanel(new MigLayout("fillx, insets 30", "[150][grow]", "[]15[]15[]15[]15[]15[]15[]15[]"));
+        detailsPanel.setBackground(CARD_BACKGROUND);
+        detailsPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
             new EmptyBorder(20, 20, 20, 20)
         ));
@@ -469,14 +476,14 @@ public class TicketListPanel extends JPanel {
         JLabel titleHeader = new JLabel("Ticket Information");
         titleHeader.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleHeader.setForeground(new Color(51, 51, 51));
-        contentPanel.add(titleHeader, "span 2, center, gapbottom 20, wrap");
+        detailsPanel.add(titleHeader, "span 2, center, gapbottom 20, wrap");
 
         // Add fields with styled labels and values
-        addDetailField(contentPanel, "Ticket ID:", id.toString());
-        addDetailField(contentPanel, "Title:", title);
+        addDetailField(detailsPanel, "Ticket ID:", id.toString());
+        addDetailField(detailsPanel, "Title:", title);
         
         // Description with text area
-        contentPanel.add(createStyledLabel("Description:"), "top");
+        detailsPanel.add(createStyledLabel("Description:"), "top");
         JTextArea descArea = new JTextArea(description);
         descArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         descArea.setLineWrap(true);
@@ -489,10 +496,10 @@ public class TicketListPanel extends JPanel {
         ));
         JScrollPane descScroll = new JScrollPane(descArea);
         descScroll.setPreferredSize(new Dimension(300, 100));
-        contentPanel.add(descScroll, "grow, wrap");
+        detailsPanel.add(descScroll, "grow, wrap");
 
         // Add status with colored label and combo box for admin
-        contentPanel.add(createStyledLabel("Status:"), "");
+        detailsPanel.add(createStyledLabel("Status:"), "");
         JPanel statusPanel = new JPanel(new MigLayout("insets 0", "[]10[]", "[]"));
         statusPanel.setBackground(CARD_BACKGROUND);
 
@@ -589,10 +596,10 @@ public class TicketListPanel extends JPanel {
             });
             statusPanel.add(updateStatusButton);
         }
-        contentPanel.add(statusPanel, "wrap");
+        detailsPanel.add(statusPanel, "wrap");
 
         // Add priority with colored label
-        contentPanel.add(createStyledLabel("Priority:"), "");
+        detailsPanel.add(createStyledLabel("Priority:"), "");
         JLabel priorityLabel = new JLabel(priority);
         priorityLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         priorityLabel.setOpaque(true);
@@ -609,13 +616,91 @@ public class TicketListPanel extends JPanel {
                 styleStatusLabel(priorityLabel, new Color(223, 246, 221), new Color(16, 124, 16));
                 break;
         }
-        contentPanel.add(priorityLabel, "wrap");
+        detailsPanel.add(priorityLabel, "wrap");
 
-        addDetailField(contentPanel, "Category:", category);
-        addDetailField(contentPanel, "Created By:", createdBy);
-        addDetailField(contentPanel, "Creation Date:", creationDate);
+        addDetailField(detailsPanel, "Category:", category);
+        addDetailField(detailsPanel, "Created By:", createdBy);
+        addDetailField(detailsPanel, "Creation Date:", creationDate);
 
-        // Add buttons panel
+        // Comments Tab
+        JPanel commentsPanel = new JPanel(new MigLayout("fillx, insets 20", "[grow]", "[]10[grow]10[]"));
+        commentsPanel.setBackground(CARD_BACKGROUND);
+
+        // Comments List
+        JPanel commentsListPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow]", "[]5[]"));
+        commentsListPanel.setBackground(CARD_BACKGROUND);
+        JScrollPane commentsScrollPane = new JScrollPane(commentsListPanel);
+        commentsScrollPane.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+        commentsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Load and display comments
+        try {
+            List<CommentDTO> comments = ApiClient.getCommentsForTicket(id);
+            for (CommentDTO comment : comments) {
+                JPanel commentPanel = createCommentPanel(comment);
+                commentsListPanel.add(commentPanel, "growx, wrap");
+            }
+        } catch (Exception ex) {
+            JLabel errorLabel = new JLabel("Failed to load comments: " + ex.getMessage());
+            errorLabel.setForeground(Color.RED);
+            commentsListPanel.add(errorLabel, "growx");
+        }
+
+        // Add Comment Form
+        JPanel addCommentPanel = new JPanel(new MigLayout("fillx, insets 10", "[grow][]", "[]"));
+        addCommentPanel.setBackground(CARD_BACKGROUND);
+        addCommentPanel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+
+        JTextArea commentArea = new JTextArea(3, 20);
+        commentArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        commentArea.setLineWrap(true);
+        commentArea.setWrapStyleWord(true);
+        commentArea.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(230, 230, 230), 1),
+            new EmptyBorder(8, 8, 8, 8)
+        ));
+        JScrollPane commentScroll = new JScrollPane(commentArea);
+
+        JButton addCommentButton = createStyledButton("Add Comment", PRIMARY_COLOR, true);
+        addCommentButton.addActionListener(e -> {
+            String content = commentArea.getText().trim();
+            if (!content.isEmpty()) {
+                try {
+                    CommentDTO newComment = ApiClient.addComment(content, id);
+                    commentArea.setText("");
+                    
+                    // Add new comment to the list
+                    JPanel commentPanel = createCommentPanel(newComment);
+                    commentsListPanel.add(commentPanel, "growx, wrap", 0);
+                    commentsListPanel.revalidate();
+                    commentsListPanel.repaint();
+                    
+                    // Scroll to top to show new comment
+                    SwingUtilities.invokeLater(() -> {
+                        commentsScrollPane.getVerticalScrollBar().setValue(0);
+                    });
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dialog,
+                        "Failed to add comment: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        addCommentPanel.add(commentScroll, "grow");
+        addCommentPanel.add(addCommentButton, "width 120!");
+
+        // Add components to comments panel
+        commentsPanel.add(new JLabel("Comments"), "wrap");
+        commentsPanel.add(commentsScrollPane, "grow, wrap");
+        commentsPanel.add(addCommentPanel, "growx");
+
+        // Add tabs
+        tabbedPane.addTab("Details", detailsPanel);
+        tabbedPane.addTab("Comments", commentsPanel);
+
+        // Add close button
         JPanel buttonPanel = new JPanel(new MigLayout("insets 20", "[center, grow]"));
         buttonPanel.setBackground(CARD_BACKGROUND);
         
@@ -625,15 +710,50 @@ public class TicketListPanel extends JPanel {
 
         // Add panels to dialog
         dialog.setLayout(new BorderLayout());
-        dialog.add(contentPanel, BorderLayout.CENTER);
+        dialog.add(tabbedPane, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         // Set dialog properties
         dialog.pack();
-        dialog.setSize(550, dialog.getHeight());
+        dialog.setSize(600, 700);
         dialog.setLocationRelativeTo(this);
         dialog.setResizable(false);
         dialog.setVisible(true);
+    }
+
+    private JPanel createCommentPanel(CommentDTO comment) {
+        JPanel panel = new JPanel(new MigLayout("fillx, insets 10", "[grow]", "[]5[]5[]"));
+        panel.setBackground(CARD_BACKGROUND);
+        panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230), 1));
+
+        // Header with username and date
+        JPanel headerPanel = new JPanel(new MigLayout("insets 0", "[]push[]", "[]"));
+        headerPanel.setBackground(CARD_BACKGROUND);
+
+        JLabel usernameLabel = new JLabel(comment.getUsername());
+        usernameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        
+        JLabel dateLabel = new JLabel(DATE_FORMATTER.format(comment.getCreatedAt()));
+        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dateLabel.setForeground(new Color(128, 128, 128));
+
+        headerPanel.add(usernameLabel);
+        headerPanel.add(dateLabel);
+
+        // Comment content
+        JTextArea contentArea = new JTextArea(comment.getContent());
+        contentArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        contentArea.setLineWrap(true);
+        contentArea.setWrapStyleWord(true);
+        contentArea.setEditable(false);
+        contentArea.setBackground(CARD_BACKGROUND);
+        contentArea.setBorder(null);
+
+        // Add components to panel
+        panel.add(headerPanel, "growx, wrap");
+        panel.add(contentArea, "growx");
+
+        return panel;
     }
 
     private void addDetailField(JPanel panel, String label, String value) {
