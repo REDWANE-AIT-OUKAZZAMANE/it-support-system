@@ -1,4 +1,4 @@
-IT Support System Client v1.0.0
+IT Support System Client v1.1.0
 ============================
 
 This is the desktop client application for the IT Support System.
@@ -29,7 +29,16 @@ Features:
 - Create and manage IT support tickets
 - Track ticket status and updates
 - Priority-based ticket handling
+- Comments system with threaded discussions
 - Modern and intuitive interface
+
+What's New in v1.1.0:
+-------------------
+- Added comments system for tickets
+- Real-time comment updates
+- User attribution for comments
+- Chronological comment history
+- Improved UI for ticket details
 
 For more information and server setup instructions, visit:
 https://github.com/REDWANE-AIT-OUKAZZAMANE/it-support-system 
