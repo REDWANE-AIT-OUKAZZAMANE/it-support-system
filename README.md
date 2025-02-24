@@ -73,11 +73,6 @@ Create `client.properties` in the client directory:
 server.url=http://localhost:8080
 ```
 
-### 4. Development Tools
-- Recommended IDE: IntelliJ IDEA or Eclipse
-- Lombok plugin installation required
-- Docker Desktop for container management
-
 ## Docker Setup
 
 Our application uses Docker for containerization with the following components:
